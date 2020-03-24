@@ -19,7 +19,7 @@ This gem provides several mina tasks:
 
 Add this line to your application's Gemfile, then `bundle install`:
 
-    gem 'mina-nginx', :require => false
+    gem 'mina-nginx', require: false
 
 Once installed, add this to your `config/deploy.rb` file:
 

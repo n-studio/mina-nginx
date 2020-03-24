@@ -1,14 +1,41 @@
-<% application = fetch :application, 'application' %>
-<% socket_path = fetch :nginx_socket_path, '/path/to/web/socket' %>
+<% application = fetch :application_name, 'application' %>
+<% http_server = fetch :http_server, 'upstream' %>
+<% socket_path = fetch :nginx_socket_path, "/tmp/<%= "#{http_server}.#{application}" %>.sock" %>
 
+<% if fetch(:http_server) == 'upstream' %>
 upstream <%= application %> {
   server unix://<%= socket_path %> fail_timeout=0;
 }
+<% end %>
+
+<% if fetch(:force_ssl, false) %>
+server {
+  server_name <%= [fetch(:server_name)].concat(fetch :additional_server_names, []).join(' ') %>;
+  listen 80;
+  listen [::]:80;
+  ## redirect http to https ##
+  rewrite ^ https://$server_name$request_uri? permanent;
+}
+<% end %>
 
 server {
-  listen 80 default deferred;
-  server_name <%= fetch :server_name, fetch(:domain) %>
-  root <%= "#{fetch :deploy_to}/#{fetch :current_path}/public" %>;
+  server_name <%= [fetch(:server_name)].concat(fetch :additional_server_names, []).join(' ') %>;
+
+<% if fetch(:force_ssl, false) %>
+  listen 443 deferred;
+  listen [::]:443 deferred;
+
+  ssl on;
+  ssl_certificate <%= fetch :ssl_cert %>;
+  ssl_certificate_key <%= fetch :ssl_key %>;
+  ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+  ssl_ciphers HIGH:!aNULL:!MD5;
+<% else %>
+  listen 80 deferred;
+  listen [::]:80 deferred;
+<% end %>
+
+  root <%= "#{fetch :current_path}/public" %>;
 
   location ^~ /assets/ {
     gzip_static on;
@@ -16,13 +43,24 @@ server {
     add_header Cache-Control public;
   }
 
+<% if fetch(:http_server) == 'upstream' %>
   try_files $uri/index.html $uri @<%= application %>;
   location @<%= application %> {
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  <% if fetch(:force_ssl, false) %>
+    proxy_set_header X-Forwarded-Proto https;
+  <% end %>
     proxy_set_header Host $http_host;
     proxy_redirect off;
     proxy_pass http://<%= application %>;
   }
+<% end %>
+
+<% if fetch(:http_server) == 'passenger' %>
+  passenger_enabled on;
+  passenger_ruby /home/<%= fetch :user %>/.rbenv/shims/ruby;
+  passenger_app_env <%= fetch :rails_env %>;
+<% end%>
 
   error_page 500 502 503 504 /500.html;
   client_max_body_size 4G;

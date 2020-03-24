@@ -1,17 +1,17 @@
 require 'mina/nginx/version'
 
 namespace :nginx do
-  application = fetch :application, 'application'
-
   set :nginx_user,        'www-data'
   set :nginx_group,       'www-data'
   set :nginx_path,        '/etc/nginx'
   set :nginx_config,      -> { "#{fetch(:shared_path)}/config/nginx.conf" }
-  set :nginx_config_e,    -> { "#{fetch(:nginx_path)}/sites-enabled/#{application}.conf" }
-  set :nginx_socket_path, -> { "#{fetch(:shared_path)}/tmp/puma.sock" }
+  set :nginx_config_e,    -> { "#{fetch(:nginx_path)}/sites-enabled/#{fetch :application_name}" }
+  set :nginx_socket_path, -> { "#{fetch(:shared_path)}/tmp/#{fetch :http_server, 'upstream'}.#{fetch :application_name}.sock" }
+  set :ssl_key,           -> { "/etc/letsencrypt/live/#{fetch(:server_name)}/privkey.pem" }
+  set :ssl_cert,          -> { "/etc/letsencrypt/live/#{fetch(:server_name)}/fullchain.pem" }
 
   desc 'Install Nginx config to repo'
-  task :install => :environment do
+  task :install do
     run :local do
       installed_path = path_for_template
 
@@ -25,14 +25,14 @@ namespace :nginx do
   end
 
   desc 'Print nginx config in local terminal'
-  task :print => :environment do
+  task :print do
     run :local do
       command %(echo '#{erb nginx_template}')
     end
   end
 
   desc 'Setup Nginx on server'
-  task :setup => :environment do
+  task :setup do
     nginx_config = fetch :nginx_config
     nginx_enabled_config = fetch :nginx_config_e
 
@@ -47,7 +47,7 @@ namespace :nginx do
 
   %w(stop start restart reload status).each do |action|
     desc "#{action.capitalize} Nginx"
-    task action.to_sym => :environment do
+    task action.to_sym do
       comment %(#{action.capitalize} Nginx)
       command "sudo service nginx #{action}"
     end
@@ -64,7 +64,7 @@ namespace :nginx do
 
   def path_for_template installed: true
     installed ?
-      File.expand_path('./config/deploy/templates/nginx.conf.erb') :
-      File.expand_path('../templates/nginx.conf.erb', __FILE__)
+      File.expand_path("./config/deploy/templates/nginx.conf.erb") :
+      File.expand_path("../templates/nginx.conf.erb", __FILE__)
   end
 end

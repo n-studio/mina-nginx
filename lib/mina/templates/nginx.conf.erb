@@ -22,10 +22,9 @@ server {
   server_name <%= [fetch(:server_name)].concat(fetch :additional_server_names, []).join(' ') %>;
 
 <% if fetch(:force_ssl, false) %>
-  listen 443 deferred;
-  listen [::]:443 deferred;
+  listen 443 deferred ssl;
+  listen [::]:443 deferred ssl;
 
-  ssl on;
   ssl_certificate <%= fetch :ssl_cert %>;
   ssl_certificate_key <%= fetch :ssl_key %>;
   ssl_protocols TLSv1 TLSv1.1 TLSv1.2;

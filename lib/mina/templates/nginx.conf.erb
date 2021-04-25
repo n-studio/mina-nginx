@@ -1,6 +1,6 @@
 <% application = fetch :application_name, 'application' %>
 <% http_server = fetch :http_server, 'upstream' %>
-<% socket_path = fetch :nginx_socket_path, "/tmp/<%= "#{http_server}.#{application}" %>.sock" %>
+<% socket_path = fetch :nginx_socket_path, "/tmp/sockets/<%= "#{http_server}.#{application}" %>.sock" %>
 
 <% if fetch(:http_server) == 'upstream' %>
 upstream <%= application %> {

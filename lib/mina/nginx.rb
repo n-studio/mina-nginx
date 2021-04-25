@@ -6,7 +6,7 @@ namespace :nginx do
   set :nginx_path,        '/etc/nginx'
   set :nginx_config,      -> { "#{fetch(:shared_path)}/config/nginx.conf" }
   set :nginx_config_e,    -> { "#{fetch(:nginx_path)}/sites-enabled/#{fetch :application_name}" }
-  set :nginx_socket_path, -> { "#{fetch(:shared_path)}/tmp/#{fetch :http_server, 'upstream'}.#{fetch :application_name}.sock" }
+  set :nginx_socket_path, -> { "#{fetch(:shared_path)}/tmp/sockets/#{fetch :application_name}-puma.sock" }
   set :ssl_server_name,   -> { fetch(:server_name) }
   set :ssl_key,           -> { "/etc/letsencrypt/live/#{fetch(:ssl_server_name)}/privkey.pem" }
   set :ssl_cert,          -> { "/etc/letsencrypt/live/#{fetch(:ssl_server_name)}/fullchain.pem" }

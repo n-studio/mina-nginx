@@ -3,7 +3,7 @@ Description=<%= fetch :application_name, "application" %> Puma HTTP Server
 After=network.target
 
 # Uncomment for socket activation (see below)
-# Requires=puma.socket
+Requires=puma.socket
 
 [Service]
 # Foreground process (do not use --daemon in ExecStart or config.rb)

@@ -1,0 +1,14 @@
+[Unit]
+Description=Puma HTTP Server Accept Sockets
+
+[Socket]
+# SocketUser=appuser
+# SocketGroup=appuser
+ListenStream=<%= fetch :current_path %>/tmp/sockets/<%= fetch :application_name, "application" %>-puma.sock
+
+NoDelay=true
+ReusePort=true
+Backlog=1024
+
+[Install]
+WantedBy=sockets.target
